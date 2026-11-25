@@ -4,18 +4,34 @@ globalThis.chapterVisuals = globalThis.chapterVisuals || {};
 globalThis.chapterVisuals.cpu = [
   {
     afterSection: 2,
-    html: `<figure class="concept-figure" role="img" aria-label="CPUがアドレス0x1000の命令を読み、足し算を実行して結果3を保存する流れ">
-      <h3 class="visual-title">命令1つの旅：1 + 2 = 3</h3>
-      <div class="visual-sequence">
-        <div class="visual-step"><span class="visual-chip">PC = 0x1000</span><strong>FETCH</strong><small>メモリ[0x1000]から命令を読む</small></div>
-        <span class="visual-arrow" aria-hidden="true">→</span>
-        <div class="visual-step"><span class="visual-chip">ADD R3, R1, R2</span><strong>DECODE</strong><small>R1とR2を足し、結果はR3へ</small></div>
-        <span class="visual-arrow" aria-hidden="true">→</span>
-        <div class="visual-step"><span class="visual-chip">R1 = 1<br>R2 = 2</span><strong>EXECUTE</strong><small>演算器が 1 + 2</small></div>
-        <span class="visual-arrow" aria-hidden="true">→</span>
-        <div class="visual-step"><span class="visual-chip">R3 = 3</span><strong>WRITE</strong><small>結果を保存、PC = 0x1004</small></div>
-      </div>
-      <figcaption class="visual-caption">番地 <code>0x1000</code> にある加算命令1つを処理する例です。<code>ADD R3, R1, R2</code>の先頭のR3が結果の保存先です。命令が4 byteごとに並ぶこの例では、次に読む位置は <code>0x1004</code> になります。</figcaption>
+    html: `<figure class="concept-figure" aria-labelledby="cpu-add-title">
+      <h3 class="visual-title" id="cpu-add-title">命令1つの旅：1 + 2 = 3</h3>
+      <p>CPUが命令を読み、足し算の結果を書くまでを上から追います。R1・R2・R3は、CPU内の小さな作業場所（レジスタ）の名前です。</p>
+      <table class="instruction-cycle" aria-labelledby="cpu-add-title">
+        <thead><tr><th scope="col">段階</th><th scope="col">CPUの動き</th></tr></thead>
+        <tbody>
+          <tr>
+            <th scope="row">1. 読む<small>FETCH</small></th>
+            <td>メモリの番地 <code>0x1000</code> から加算命令を読みます。
+              <code class="instruction-value">ADD R3, R1, R2</code></td>
+          </tr>
+          <tr>
+            <th scope="row">2. 解釈<small>DECODE</small></th>
+            <td><code>ADD</code> は足し算です。この命令では、<strong>R1とR2が入力、R3が結果の置き場所</strong>です。</td>
+          </tr>
+          <tr>
+            <th scope="row">3. 計算<small>EXECUTE</small></th>
+            <td>R1に入っている1と、R2に入っている2を足します。
+              <code class="instruction-value">1 + 2 = 3</code></td>
+          </tr>
+          <tr>
+            <th scope="row">4. 書く<small>WRITE</small></th>
+            <td>計算した値をR3へ書き戻します。
+              <code class="instruction-value instruction-result">R3 = 3</code></td>
+          </tr>
+        </tbody>
+      </table>
+      <figcaption class="visual-caption">R1とR2に値が入った状態から始める例です。次の命令はR3から結果を使えます。結果をメモリへ移すには、別の書き込み命令を使います。</figcaption>
     </figure>`
   },
   {
@@ -48,7 +64,7 @@ globalThis.chapterVisuals.instructions = [
         <span class="visual-arrow"><span class="visual-arrow-symbol" aria-hidden="true">→</span><span>JIT</span></span>
         <div class="visual-step"><span class="visual-chip">CMP X0, #18<br>B.LT L1</span><strong>ARM64アセンブリ表現</strong><small>機械語を人向けの記号で表示</small></div>
       </div>
-      <figcaption class="visual-caption">同じソースでも、実行するCPUに合わせて最後の命令の表現が変わります。</figcaption>
+      <figcaption class="visual-caption">矢印に沿って、同じ「18と比べる」処理を三つの表現で追います。javacはJavaソースをBytecodeへ変換する道具で、JITは実行中に機械語へ変換する仕組みです。最後の欄では、機械語を人が読める記号で示しています。</figcaption>
     </figure>`
   },
   {
@@ -86,7 +102,7 @@ globalThis.chapterVisuals.registers = [
         <span class="visual-arrow" aria-hidden="true">→</span>
         <div class="visual-step"><span class="visual-chip">[0x4008] = 12</span><strong>保存</strong><small>cへ書き戻し</small></div>
       </div>
-      <figcaption class="visual-caption">レジスタは計算中の値をCPUのすぐそばに置く、少量で高速な作業場所です。</figcaption>
+      <figcaption class="visual-caption">角括弧の中はメモリの番地です。そこから読み出した7と5がレジスタに入り、結果の12はR3を経由して、最後にcの番地 <code>0x4008</code> へ書き込まれます。</figcaption>
     </figure>`
   },
   {
