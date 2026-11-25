@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="ja" data-theme="light">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Web技術の内部を、CPU・OSからネットワーク、データベース、ブラウザまで積み上げて学ぶ技術書。" />
+    <title>UNDER THE WEB — Webエンジニア基礎学習</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <a class="skip-link" href="#main-content">本文へ移動</a>
+    <header class="masthead">
+      <button class="icon-button mobile-only" id="menu-button" type="button" aria-label="目次を開く" aria-expanded="false">目次</button>
+      <a class="wordmark" href="#home" aria-label="UNDER THE WEB ホーム">
+        <span>UNDER</span><span>THE</span><span>WEB</span>
+      </a>
+      <div class="masthead-actions">
+        <button class="icon-button" id="theme-button" type="button" aria-label="ダークモードに切り替える">☾</button>
+      </div>
+    </header>
+
+    <div class="reading-progress" aria-hidden="true"><span id="reading-progress-bar"></span></div>
+
+    <div class="app-shell">
+      <aside class="sidebar" id="sidebar" aria-label="教材の目次">
+        <div class="sidebar-inner">
+          <div class="search-wrap">
+            <label for="site-search">教材を検索</label>
+            <div class="search-control">
+              <input id="site-search" type="search" placeholder="例: 仮想メモリ" autocomplete="off" />
+              <kbd>/</kbd>
+            </div>
+          </div>
+          <div class="course-progress" aria-label="学習進捗">
+            <div class="progress-copy"><span>学習進捗</span><strong id="progress-percent">0%</strong></div>
+            <div class="progress-track"><span id="progress-fill"></span></div>
+            <p id="progress-detail">0 / 0 章 完了</p>
+          </div>
+          <nav id="course-navigation"></nav>
+        </div>
+      </aside>
+
+      <div class="sidebar-backdrop" id="sidebar-backdrop" hidden></div>
+
+      <main id="main-content" tabindex="-1">
+        <div id="search-results" class="search-results" hidden></div>
+        <article id="chapter-content" class="chapter"></article>
+        <nav class="chapter-pagination" aria-label="章の移動">
+          <button id="prev-chapter" type="button"><span>前の章</span><strong></strong></button>
+          <button id="next-chapter" type="button"><span>次の章</span><strong></strong></button>
+        </nav>
+      </main>
+    </div>
+
+    <footer>
+      <a class="wordmark footer-mark" href="#home"><span>UNDER</span><span>THE</span><span>WEB</span></a>
+      <p>技術が変わっても、内部の原理から考えられるようになるための個人教科書。</p>
+    </footer>
+
+    <noscript>この教材の章移動・検索・進捗保存にはJavaScriptが必要です。</noscript>
+    <script src="curriculum.js"></script>
+    <script src="part2-os.js"></script>
+    <script src="part3-network.js"></script>
+    <script src="part4-web.js"></script>
+    <script src="part5-browser.js"></script>
+    <script src="graph-traversal.js"></script>
+    <script src="part6-algorithms.js"></script>
+    <script src="part7-java.js"></script>
+    <script src="part8-rdb.js"></script>
+    <script src="part9-concurrency.js"></script>
+    <script src="part10-security.js"></script>
+    <script src="part11-containers.js"></script>
+    <script src="part12-distributed.js"></script>
+    <script src="final-chapter.js"></script>
+    <script src="visuals-foundation.js"></script>
+    <script src="visuals-runtime.js"></script>
+    <script src="script.js"></script>
+  </body>
+</html>
