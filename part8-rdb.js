@@ -62,7 +62,16 @@
     <h3>誰の成績かと、何の成績かを区別する</h3>
     <p><code>scores.student_id</code>が生徒表の<code>id</code>を参照すれば、存在する生徒の成績だけを登録できます。それだけなら同じ生徒の数学を2行登録することもできます。生徒ごとに各教科の成績を一つにするなら、生徒IDと教科の組み合わせの一意性も決めます。</p>
     <p>外部キーを設計するときは「参照先が存在するか」を、主キーやUNIQUE制約では「同じものを何件まで持てるか」を考えます。二つの約束を分けると、表が何を表すかが明確になります。</p>`,
-      internal: `${diagram("参照整合性", [["students", "PK id=7"], ["Foreign Key", "student_id=7"], ["scores", "子の行"], ["制約検査", "親の存在を確認"], ["COMMIT", "確定"]], "Foreign Keyは、子の値が親表の実在するKeyを指すことを確認します。")}<h3>Primary Key</h3><p>Primary Keyは表の各行を一意に識別する列または列の組です。重複できず、通常NULLも許されません。InnoDBでは主キーがClustered Indexの並びとデータ保存の中心になります。</p><h3>Foreign Key</h3><p>Foreign Keyは、別表のPrimary Keyなどを参照する列です。子表の値が親表に存在するかを確認し、孤児行を防ぎます。これは列名が同じというだけではなく、DBへ明示的に制約を定義して初めて検査されます。</p><h3>更新と削除の順番</h3><p>親Keyを変更・削除すると、子行が参照できなくなる可能性があります。RESTRICTなら子がある間は拒否、CASCADEなら子も連動、SET NULLなら子の参照をNULLにする、というようにルールを選びます。業務の意味とNULL許可を合わせます。</p>`,
+      internal: `
+      <figure class="concept-figure" aria-labelledby="foreign-key-title">
+        <h3 class="visual-title" id="foreign-key-title">外部キーが確認する生徒番号</h3>
+        <p>生徒表 <code>students</code> にいるのは7番だけです。成績表 <code>scores</code> に行を追加するとき、DBは成績側の <code>student_id</code> と同じ <code>id</code> が生徒表にあるかを確かめます。</p>
+        <div class="visual-compare">
+          <div><strong><code>student_id = 7</code></strong><p>生徒表に <code>id = 7</code> があるので、その生徒の成績を追加できます。</p></div>
+          <div><strong><code>student_id = 999</code></strong><p>生徒表に <code>id = 999</code> がないので、外部キーの検査で追加を拒否します。</p></div>
+        </div>
+        <figcaption class="visual-caption">主キーは生徒表の一行を識別し、外部キーは成績の行が実在する生徒を指すことを確かめます。</figcaption>
+      </figure><h3>Primary Key</h3><p>Primary Keyは表の各行を一意に識別する列または列の組です。重複できず、通常NULLも許されません。InnoDBでは主キーがClustered Indexの並びとデータ保存の中心になります。</p><h3>Foreign Key</h3><p>Foreign Keyは、別表のPrimary Keyなどを参照する列です。子表の値が親表に存在するかを確認し、孤児行を防ぎます。これは列名が同じというだけではなく、DBへ明示的に制約を定義して初めて検査されます。</p><h3>更新と削除の順番</h3><p>親Keyを変更・削除すると、子行が参照できなくなる可能性があります。RESTRICTなら子がある間は拒否、CASCADEなら子も連動、SET NULLなら子の参照をNULLにする、というようにルールを選びます。業務の意味とNULL許可を合わせます。</p>`,
       web: `<p>APIのURLに<code>/students/7</code>とあっても、数字を受け取っただけで正しいとは限りません。SQLのWHERE条件とForeign Keyが別々に検証し、存在しない親や権限外の行を返さないようにします。</p><p>分散処理や外部システム連携では、Foreign Keyを使わずアプリで整合性を保つ場合もあります。そのときは再試行や削除順を含め、制約をどこが担当するか明確にします。</p>`,
       lab: `${experiment("MySQL 検証DB（macOS / Linux）", `${dbSetup}\nCREATE TABLE parent (id INT PRIMARY KEY);\nCREATE TABLE child (id INT PRIMARY KEY, parent_id INT,\n  CONSTRAINT fk_child_parent FOREIGN KEY (parent_id) REFERENCES parent(id));\nINSERT INTO parent VALUES (1);\nINSERT INTO child VALUES (10,1);\nINSERT INTO child VALUES (11,999);`, "正しい親参照は通り、存在しない親へのINSERTは止まることを確認します。", "最後のINSERTのERROR、SHOW CREATE TABLEの制約名に注目します。", "Foreign Keyがアプリの都合ではなくInnoDBの制約として働くと分かります。")}${experiment("MySQL 検証DB（macOS / Linux）", `SHOW CREATE TABLE child\\G\nSELECT CONSTRAINT_NAME, REFERENCED_TABLE_NAME\nFROM information_schema.KEY_COLUMN_USAGE\nWHERE TABLE_SCHEMA='lesson_rdb' AND TABLE_NAME='child';`, "定義したForeign KeyをDBのメタデータで確認します。", "CONSTRAINT_NAMEと参照先の表・列に注目します。", "関係がSQL定義として保存され、後から調査できると分かります。")}`,
       misunderstandings: [["Foreign Keyは、同じ名前の列なら自動で効きます。", "CREATE TABLEなどで制約として定義した場合に、InnoDBが参照整合性を検査します。"], ["Primary Keyは検索を速くするだけのIndexです。", "検索にも使われますが、各行を一意に識別し、InnoDBのデータ配置の中心になる意味があります。"]],

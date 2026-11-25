@@ -7,6 +7,18 @@
   const diagram = (title, items, caption) => `<figure class="diagram"><p class="diagram-title">${title}</p><div class="memory-map">${items.map(([a,b]) => "<div class=\"memory-row\"><span>"+a+"</span><span>"+b+"</span></div>").join("")}</div><figcaption>${caption}</figcaption></figure>`;
   const flow = (title, items, caption) => `<figure class="diagram"><p class="diagram-title">${title}</p><div class="flow-diagram">${items.map(([a,b]) => "<div class=\"flow-node\"><strong>"+a+"</strong><small>"+b+"</small></div>").join("")}</div><figcaption>${caption}</figcaption></figure>`;
   const ch = (id, no, shortTitle, title, deck, content) => makeChapter({ id, no, ...metadata, shortTitle, title, deck }, content);
+  const binaryTreeFigure = (id, title, intro, root, caption, path = []) => {
+    const node = ([value, ...children]) => `<li role="listitem">
+      <strong class="binary-tree-node${path.includes(value) ? " is-search-path" : ""}">${value}</strong>
+      ${children.length ? `<ul role="list">${children.map(node).join("")}</ul>` : ""}
+    </li>`;
+    return `<figure class="concept-figure" aria-labelledby="${id}">
+      <h3 class="visual-title" id="${id}">${title}</h3>
+      <p>${intro}</p>
+      <ul class="binary-tree" role="list" aria-label="親子関係">${node(root)}</ul>
+      <figcaption class="visual-caption">${caption}</figcaption>
+    </figure>`;
+  };
 
   const arrayList = ch("array-linked-list", 1, "Array / Linked List", "Array / Linked List：データの並べ方", "データをどこに置くかで、読み出しや追加の速さが変わります。ArrayとLinked Listを、Webの一覧やメモリの見え方から比べます。", {
     goals:["Arrayが連続した場所に並ぶこと","Linked Listが値と次の場所へのリンクを持つこと","読み出し・追加・削除の得意不得意","JavaとJavaScriptの配列の特徴"],
@@ -66,7 +78,19 @@
       <li><strong>3から右へ</strong>進みます。5は3より大きいためです。</li>
       <li><strong>6から左へ</strong>進もうとします。そこに子がなければ、5は入っていないと分かります。</li></ol>
     <p>各分岐で大小関係が成り立つので、反対側の枝を探し直す必要がありません。検索の回数は、実際に通った高さに応じて増えます。</p>`,
-    internal:`${diagram("Binary Search Tree",[["Root","8"],["左の部分木","3 → 1 / 6"],["右の部分木","10"],["探索6","8 → 左 → 3 → 右 → 6"]],"各Nodeで比較し、左か右の片方へ進みます。")}${flow("高さの違い",[["Balanced","8 → (3,10)"],["Skewed","1 → 2 → 3 → 4"],["比較回数","高さに比例"],["対策","Balance維持"]],"Node数だけでなく高さが効きます。")}<h3>探索と挿入</h3><p>値を比較し、小さければ左、大きければ右へ進みます。空き場所へ挿入すると順序を保てます。</p><h3>Traversals</h3><p>Preorderは親→左→右、Inorderは左→親→右、Postorderは左→右→親です。BSTのInorderは小さい順になります。</p>${callout("warning","偏り","AVL TreeやRed-Black Treeは回転で高さを抑えます。DBでは次章のB-Tree系がページをまとめます。")}`,
+    internal:`${binaryTreeFigure("bst-search-title", "二分探索木で6を探す",
+      "箱は値を持つノード、線は親と子のつながりです。いちばん上の8から始めます。",
+      [8, [3, [1], [6]], [10]],
+      "6は8より小さいので左の3へ、3より大きいので右の6へ進みます。太い枠がこの探索で訪れたノードです。",
+      [8, 3, 6])}
+    <figure class="concept-figure" aria-labelledby="bst-height-title">
+      <h3 class="visual-title" id="bst-height-title">同じ7件でも、木の形で探索回数が変わる</h3>
+      <div class="visual-compare">
+        <div><strong>左右に分かれた木</strong><p>根が4で、右の子が6、その右が7なら、<code>4 → 6 → 7</code> の3回で見つかります。</p></div>
+        <div><strong>右にだけ伸びた木</strong><p>1から7まで右へ一つずつつながっていると、7に着くまでに7回比べます。</p></div>
+      </div>
+      <figcaption class="visual-caption">1〜7から同じ値7を探しています。比較回数は、出発点から目的の値までに通るノードの数で決まります。</figcaption>
+    </figure><h3>探索と挿入</h3><p>値を比較し、小さければ左、大きければ右へ進みます。空き場所へ挿入すると順序を保てます。</p><h3>Traversals</h3><p>Preorderは親→左→右、Inorderは左→親→右、Postorderは左→右→親です。BSTのInorderは小さい順になります。</p>${callout("warning","偏り","AVL TreeやRed-Black Treeは回転で高さを抑えます。DBでは次章のB-Tree系がページをまとめます。")}`,
     web:`<p>カテゴリや組織階層、DOM、JSONの入れ子はTreeで表現できます。親から子を再帰的に訪れる処理に役立ちます。経路PrefixもTreeとして見ると、条件が長い順に絞られる様子が分かります。</p>`,
     lab:`${experiment("macOS / Java","cat > BST.java <<'EOF'\nclass BST {static class N{int v;N l,r;N(int v){this.v=v;}}static N a(N n,int v){if(n==null)return new N(v);if(v<n.v)n.l=a(n.l,v);else n.r=a(n.r,v);return n;}static void in(N n){if(n==null)return;in(n.l);System.out.print(n.v+\" \");in(n.r);}public static void main(String[]x){N n=null;for(int v:new int[]{8,3,10,1,6})n=a(n,v);in(n);}}\nEOF\njavac BST.java && java BST","BSTを作りInorderで昇順に出します。","再帰の左・自分・右に注目します。","Nodeと再帰の構造を確認できます。")}${experiment("Linux / JavaScript","node -e \"class N{constructor(v){this.v=v;this.l=null;this.r=null}};function a(n,v){if(!n)return new N(v);if(v<n.v)n.l=a(n.l,v);else n.r=a(n.r,v);return n};console.log('BST node',new N(8))\"","JavaScriptでNodeを作りBSTの入口を確認します。","nullが葉の先を表す点に注目します。","JavaとJavaScriptでNodeの考え方が共通だと分かります。")}`,
     misunderstandings:[["BSTは必ず半分ずつに分かれます。","入力順で偏り、探索がO(n)になることがあります。"],["Treeの葉は必ず同じ深さです。","通常のTreeでは深さが違って構いません。"]],
@@ -103,7 +127,10 @@
     <h3>Heapで次を選び、Graphで行き先を表す</h3>
     <p>配達先の近さを優先したい場面を想像してください。配送地点と道路のつながりはGraphで表し、次に処理する候補を距離の小さい順に選びたいならHeapを使えます。Heapの先頭にあるのは、その時点で登録された候補のうち優先度が最も高いものです。</p>
     <p>道路を一本追加するとGraphのつながりが変わります。候補を追加するとHeapで次に選ばれる項目が変わることがあります。二つのデータ構造に、それぞれ何を保存するかを言い分けてみましょう。</p>`,
-    internal:`${diagram("Min Heap",[["Root","1（最小）"],["Level 1","3 / 5"],["Level 2","7 / 8 / 9"],["規則","親 ≤ 子"]],"各行はMin Heapの親と子の関係を説明しています。親は自分の子以下なので、根から順に比べれば根が全体の最小です。別々の枝にある値どうしの順序は、この規則からは決まりません。")}${flow("Graphの関係",[["Service A","→ DB B（weight 4）"],["Service A","→ Cache C（weight 1）"],["Cache C","→ Service D（weight 2）"],["経路","A→C→D 合計3"]],"Edgeは向きや重みを持てます。")}<h3>Heapの操作</h3><p>末尾へ置いて親と比べ上へ動かすup-heap、Rootを置き換え下へ動かすdown-heapを行います。高さがlog nなので追加・削除はO(log n)です。</p><h3>Graphの探索</h3><p>BFSはQueueで近い層から、DFSはStackや再帰で深く進みます。<a class="inline-link" href="#graph-traversal">次章の探索図</a>で、同じグラフをたどる順番を比べられます。非負の重み付き最短経路にはDijkstra法などを選びます。</p>${callout("note","Treeとの違い","Treeは親が基本一つですが、Graphは複数のつながりや循環を持てます。")}`,
+    internal:`${binaryTreeFigure("min-heap-title", "Min Heapでは根がいちばん小さい",
+      "線でつながった親子を比べてください。Min Heapの規則は、下にある子の値が親以上であることです。",
+      [1, [3, [7], [8]], [5, [9], [6]]],
+      "根の1からどの枝へ下りても、値は小さくならないので、1が全体の最小値です。最下段の7と6のように、別の枝の値どうしは大小順に並ぶ必要がありません。")}${flow("Graphの関係",[["Service A","→ DB B（weight 4）"],["Service A","→ Cache C（weight 1）"],["Cache C","→ Service D（weight 2）"],["経路","A→C→D 合計3"]],"Edgeは向きや重みを持てます。")}<h3>Heapの操作</h3><p>末尾へ置いて親と比べ上へ動かすup-heap、Rootを置き換え下へ動かすdown-heapを行います。高さがlog nなので追加・削除はO(log n)です。</p><h3>Graphの探索</h3><p>BFSはQueueで近い層から、DFSはStackや再帰で深く進みます。<a class="inline-link" href="#graph-traversal">次章の探索図</a>で、同じグラフをたどる順番を比べられます。非負の重み付き最短経路にはDijkstra法などを選びます。</p>${callout("note","Treeとの違い","Treeは親が基本一つですが、Graphは複数のつながりや循環を持てます。")}`,
     web:`<p>Job Queueの優先度付け、タイムアウトが近いTaskの選択、ロードバランサー候補にPriority Queueが使えます。Graphはサービス依存関係、Webリンク、CDNやネットワーク経路を表します。</p><p>第3部のRoutingは重み付きGraphの経路選択として見られます。</p>`,
     lab:`${experiment("macOS / Java","cat > HeapGraph.java <<'EOF'\nimport java.util.*;\nclass HeapGraph{public static void main(String[]x){PriorityQueue<Integer>q=new PriorityQueue<>();q.add(5);q.add(1);q.add(3);System.out.println(q.poll());}}\nEOF\njavac HeapGraph.java && java HeapGraph","PriorityQueueを確認します。","pollが最小値1を返す点に注目します。","Heapが優先度順の取り出しに使えると分かります。")}${experiment("Linux / JavaScript","node -e \"const q=[5,1,3];q.sort((a,b)=>a-b);console.log(q.shift());const g={A:['B','C'],B:['D']};console.log(g)\"","簡易Priority QueueとGraphを動かします。","sort方式は毎回並べ直す点に注目します。","同じ結果でも構造で操作コストが変わります。")}`,
     misunderstandings:[["Heapは全要素が小さい順です。","Rootが最小（最大）という規則で、兄弟同士まで完全には並びません。"],["Graphの最短経路はいつもDFSです。","重みなしならBFS、重み付きならDijkstraなどが向きます。"]],

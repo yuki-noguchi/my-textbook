@@ -51,7 +51,21 @@ NODE`)}
     <h3>残り時間を次のサービスへ渡す</h3>
     <p>最初の受付から800 ms以内に応答したいとします。受付と検査までに250 ms、別サービスの呼び出し前にさらに150 msかかった場合、残りは400 msです。その先にも時間が必要なら、この呼び出しに400 msすべてを使えるわけではありません。</p>
     <p>各段階で同じ800 msを設定すると、時間を足した結果は利用者が待てる800 msを超えます。共通の期限から残り時間を割り当てると、応答を作る分の余裕も計算に入れられます。</p>`,
-    internal:`${decisionChart("Timeout後は三つの可能性へ分かれる",["Clientの期限切れ","時間内に返事が届かなかった"],[["Serverは成功済み","処理は終わり、返事だけ届かなかった","Request IDで結果を取得","store"],["Serverは処理中","仕事は続いている","状態APIで待つか取消す","wait"],["Serverへ未到着","接続前などで止まった","安全条件を確認してRetry","error"]],"Timeoutから直接『失敗』へ一本で進めません。状態を確認してから次の行動を選びます。")}${chart("Timeoutの種類",[["Connect","接続確立まで","wait"],["Read","返事のByteまで","wait"],["Request","全体の期限","wait"],["After","処理結果を確認","process"]],"どの時計が切れたかを記録します。")} ${table("期限の予算",[["Client全体","2,000 ms"],["DNS","300 ms"],["TCP/TLS","500 ms"],["API/DB","残り1,200 ms"]],"Retryすると残り時間も減ります。")}<h3>期限の種類</h3><p>Connectは接続まで、Readはデータを待つ時間、Requestは送信から完了までです。ライブラリごとに名前と既定値が異なります。</p><h3>Timeout後の状態</h3><p>Socketを閉じてもServerの仕事が自動で取り消されるとは限りません。キャンセル信号、Job ID、状態確認APIを用意します。</p>${callout("note","設定の記録","timeout値、区間、依存先、request IDをログへ残します。")}`,
+    internal:`${decisionChart("Timeout後に考える三つの例",["Clientの期限切れ","時間内に返事が届かなかった"],[["Serverは成功済み","処理は終わり、返事だけ届かなかった","Request IDで結果を取得","store"],["Serverは処理中","仕事は続いている","状態APIで待つか取消す","wait"],["Serverへ未到着","接続前などで止まった","安全条件を確認してRetry","error"]],"Timeoutから直接『失敗』へ一本で進めません。状態を確認してから次の行動を選びます。")}
+      <figure class="concept-figure" aria-labelledby="timeout-clocks-title">
+        <h3 class="visual-title" id="timeout-clocks-title">どの待ち時間に上限を設けるか</h3>
+        <p>一件の要求に対して、何を待つときの上限かを比べます。</p>
+        <table class="diagram-data-table" aria-labelledby="timeout-clocks-title">
+          <thead><tr><th scope="col">期限の種類</th><th scope="col">期限を設ける対象</th></tr></thead>
+          <tbody>
+            <tr><th scope="row">Connect</th><td>相手との接続ができるまで</td></tr>
+            <tr><th scope="row">Read</th><td>接続後に、次のデータが届くまで</td></tr>
+            <tr><th scope="row">Request</th><td>要求を始めてから、やり取りを終えるまでの全体</td></tr>
+          </tbody>
+        </table>
+        <figcaption class="visual-caption">全体の期限が先に切れることもあります。計測の始点や適用範囲は使うライブラリによって異なるので、実際の設定ではどの待ち時間を指すかを確認します。</figcaption>
+      </figure>
+      ${table("期限の予算",[["Client全体","2,000 ms"],["DNS","300 ms"],["TCP/TLS","500 ms"],["API/DB","残り1,200 ms"]],"Retryすると残り時間も減ります。")}<h3>期限の種類</h3><p>Connectは接続まで、Readはデータを待つ時間、Requestは送信から完了までです。ライブラリごとに名前と既定値が異なります。</p><h3>Timeout後の状態</h3><p>Socketを閉じてもServerの仕事が自動で取り消されるとは限りません。キャンセル信号、Job ID、状態確認APIを用意します。</p>${callout("note","設定の記録","timeout値、区間、依存先、request IDをログへ残します。")}`,
     web:`<p>第2部のSocketが長く待つとThread Poolの空きが減ります。第11部のProbe再起動をtimeoutの代わりに乱用すると、処理中のPodをさらに不安定にします。</p><p>HTTP Clientには全体、接続、応答の期限を明示します。</p>`,
     lab:`${serverLab(3031, `const server = http.createServer((request, response) => {
   setTimeout(() => response.end('success\\n'), 1200);

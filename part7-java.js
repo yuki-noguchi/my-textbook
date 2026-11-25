@@ -80,7 +80,16 @@
     <h3>互いに参照している二つのオブジェクト</h3>
     <p>オブジェクトAとBが互いを指しているとします。GC RootからAへ到達できる間は、その先のBにも到達できます。外部からの参照がなくなり、どのGC RootからもAやBへたどれなくなれば、二つは互いを指していても回収の対象になります。</p>
     <p>リークを調べるときは「誰がこのオブジェクトを指しているか」を逆向きにたどります。長生きするコレクションや静的フィールドが経路の先にあれば、そこで保持する必要があるかを考えられます。</p>`,
-    internal: `${flowDiagram("到達可能性の探索", [["GC Root", "Thread Stack / static / JNI"], ["Reference", "u → User"], ["Object graph", "User → Address → String"], ["到達可能", "今回の回収対象外"], ["到達不能", "garbageとして回収候補"]], "GCは変数名の意味ではなく、RootからReferenceを実際にたどれるかを見ます。循環ReferenceでもRootから届かなければ回収できます。")}
+    internal: `
+      <figure class="concept-figure" aria-labelledby="gc-reachability-title">
+        <h3 class="visual-title" id="gc-reachability-title">GCが残すものと回収できるもの</h3>
+        <p>GC Rootは、GCが参照をたどり始める場所です。矢印は参照している相手を表します。</p>
+        <div class="visual-compare">
+          <div><strong>Rootからたどれる</strong><p><code>GC Root → User → Address</code></p><p>Rootに直接つながるUserと、その先のAddressを残します。</p></div>
+          <div><strong>Rootからたどれない</strong><p><code>A ⇄ B</code></p><p>AとBは互いを指しています。Rootから両方に届かないので、どちらも回収候補です。</p></div>
+        </div>
+        <figcaption class="visual-caption">たとえば図のRootからUserへの参照がなくなり、ほかのRootからも両方に届かなくなれば、UserとAddressも回収の候補になります。</figcaption>
+      </figure>
     ${conceptFigure("世代別Heapの概念", [["Eden", "新しく作ったObject"], ["Survivor", "若いGCを生き残ったObject"], ["Old", "長く使われるObject"], ["GC", "不要部分を回収し空きを作る"], ["Stop-the-world", "一部の処理を止める時間"]], "世代やアルゴリズムの名前はJDK・GC実装で異なります。短命Objectと長寿命Objectを分ける考え方が基本です。")}
     <h3>GC Root</h3><p>GC Rootは、探索の出発点です。実行中ThreadのStackにあるReference、staticフィールド、JNI（Java Native Interface）から保持されたReferenceなどが代表例です。RootからたどれるObjectは、今後使われる可能性があるため回収しません。</p><h3>世代と回収</h3><p>多くのJVMは、作ったばかりのObjectを若い世代、長く生き残るObjectをOld世代として扱います。requestごとの一時的なStringや配列が短命なら、若い世代を中心に回収することで調査範囲を小さくできます。</p>${callout("warning", "停止時間", "GC中にアプリのThreadを止める区間が生じることがあります。『GCが多い＝必ず悪い』ではなく、回収時間、頻度、Heap使用量、requestのレイテンシを一緒に見ます。")}`,
     web: `<p>Web APIが毎回大きなJSON Objectを作ると、短命Objectが増えてGCの仕事も増えます。cacheやstaticコレクションが不要Objectを保持し続けると、GCから届くため回収されず、memory leakのような状態になります。</p><p>第8部のDB結果やconnectionをHeapへ保持する設計では、GC対象のJava Objectと、DB側に残るtransaction・sessionを分けて考えます。第9部では、複数ThreadからのRoot参照と安全な更新を扱います。</p>`,

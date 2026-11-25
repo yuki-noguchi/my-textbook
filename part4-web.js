@@ -58,7 +58,22 @@
     <h3>CSSが画像を追い越せる場合</h3>
     <p>画像のFrameが大きな転送の途中で、CSSのFrameが送れる状態になったとします。送信側は画像のFrameの間にCSSのFrameを挟めます。受信側はStream番号を見ながら集めるので、画像が完了する前にCSSを使い始めることができます。</p>
     <p>一方、下のTCPで途中のデータが欠けると、それより後ろのbyteはTCPの順番が整うまでアプリへ渡されません。「HTTPがFrameを混ぜられること」と「TCPが順序どおりに渡すこと」が別の層の話だと分かります。</p>`,
-      internal: `${diagram("HTTP/2の多重化", [["TCP 1本", "接続は共有"], ["Frame", "小さな部品"], ["Stream 1", "HTML"], ["Stream 3", "CSS"], ["Stream 5", "画像"]], "FrameをStream番号で振り分けることで、資源の交換を一つの接続に混ぜて運べます。")}
+      internal: `
+      <figure class="concept-figure" aria-labelledby="http2-frames-title">
+        <h3 class="visual-title" id="http2-frames-title">HTTP/2の多重化</h3>
+        <p>一本の接続に、HTML・CSS・画像を運ぶ小さな部品（Frame）が混ざって届く例です。受信側は、やり取りごとに付いたStream番号で部品を振り分けます。</p>
+        <table class="diagram-data-table" aria-labelledby="http2-frames-title">
+          <thead><tr><th scope="col">到着順</th><th scope="col">Stream番号</th><th scope="col">中身</th></tr></thead>
+          <tbody>
+            <tr><th scope="row">1</th><td>1</td><td>HTML 前半</td></tr>
+            <tr><th scope="row">2</th><td>3</td><td>CSS</td></tr>
+            <tr><th scope="row">3</th><td>5</td><td>画像 前半</td></tr>
+            <tr><th scope="row">4</th><td>1</td><td>HTML 後半</td></tr>
+            <tr><th scope="row">5</th><td>5</td><td>画像 後半</td></tr>
+          </tbody>
+        </table>
+        <figcaption class="visual-caption">例えば到着順1と4は、どちらもStream 1なのでHTMLとしてつなぎます。CSSはHTMLの後半を待たずに届きます。図では本文を運ぶFrameだけを示しています。</figcaption>
+      </figure>
         <h3>FrameとStream</h3><p>HTTP/2はHeaderやBodyを一つの大きなテキストRequestとしてではなく、二進数の<span class="term">Frame</span>へ分けます。FrameにはどのStreamのものかを示す番号があります。Headerを運ぶFrameと、Bodyのデータを運ぶFrameは別種類です。</p><h3>Header圧縮</h3><p>CookieやUser-Agentなど、毎回似たHeaderをそのまま繰り返すと通信量が増えます。HPACKは過去に送ったHeaderを表に覚え、二回目から短い番号で示します。値が変わると新しい情報を送ります。</p><h3>残るTCPの待ち</h3><p>Streamは分かれていても、TCPは全バイトを一つの順番で届けます。一つのpacketが失われると、その後ろのデータが再送を待つ可能性があります。HTTP/2はHTTPの順番待ちを減らしますが、TCPレベルの待ちまでは消しません。HTTP/3はここを別の方法で扱います。</p>`,
       web: `<p>ブラウザはHTTPS接続時のALPNで、相手がHTTP/2を使えるか確認します。サーバーが対応していれば、画像ごとにTCP接続を増やさずに多くのStreamを使えます。HTTP/2ではサーバープッシュなどの機能もありましたが、実際の利用や効果は構成によって異なります。</p><p>アプリ開発者は通常、HTTP/2のFrameを直接作りません。Webサーバーやリバースプロキシが処理します。第7章で扱うCDNやReverse Proxyが、利用者とアプリの間でHTTP/2を終端することもあります。</p>`,
       lab: `${experiment("macOS / Linux", `curl -I -v --http2 https://example.com`, "サーバーとのHTTP/2利用可否とALPNを確認します。", "ALPNでh2が選ばれたか、環境のcurlがHTTP/2対応かに注目します。", "HTTP/2はHTTP Headerの機能だけでなく、TLS接続の通信方式の選択にも関係すると分かります。")}${callout("note", "環境差", "curlにHTTP/2機能がない場合は、`curl --version`でFeaturesを確認してください。対応するcurlやブラウザの開発者ツールでも観察できます。")}`,

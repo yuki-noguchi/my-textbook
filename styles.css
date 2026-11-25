@@ -308,6 +308,47 @@ main { min-width: 0; }
   font: 13px/1 var(--sans);
   content: "→" / "";
 }
+.chapter .binary-tree,
+.chapter .binary-tree ul { margin: 0; padding: 0; list-style: none; }
+.chapter .binary-tree li { position: relative; display: grid; justify-items: center; margin: 0; }
+.chapter .binary-tree ul {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: start;
+  position: relative;
+  width: 100%;
+  padding-top: 24px;
+}
+.binary-tree ul::before,
+.binary-tree ul > li::before {
+  position: absolute;
+  left: 50%;
+  height: 12px;
+  border-left: 1px solid var(--ink);
+  content: "";
+}
+.binary-tree ul::before { top: 0; }
+.binary-tree ul > li::before { bottom: 100%; }
+.binary-tree ul::after {
+  position: absolute;
+  top: 12px;
+  inset-inline: 25%;
+  border-top: 1px solid var(--ink);
+  content: "";
+}
+.binary-tree-node {
+  display: inline-grid;
+  place-items: center;
+  min-width: 36px;
+  min-height: 36px;
+  border: 1px solid var(--ink);
+  font: 700 15px/1 var(--sans);
+}
+.binary-tree-node.is-search-path {
+  background: var(--diagram-input);
+  outline: 2px solid var(--ink);
+  outline-offset: -2px;
+}
 .visual-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr));
@@ -480,6 +521,8 @@ main { min-width: 0; }
 .chapter table { width: 100%; border-collapse: collapse; font: 15px/1.5 var(--sans); }
 .chapter th, .chapter td { padding: 12px; border: 1px solid var(--hairline); text-align: left; vertical-align: top; }
 .chapter th { background: var(--canvas-soft); }
+.chapter .diagram-data-table { font-size: 14px; }
+.chapter .diagram-data-table :is(th, td) { padding: 8px; overflow-wrap: anywhere; }
 .memory-address-table th:first-child { white-space: nowrap; }
 .chapter .instruction-cycle :is(th, td) { padding: 8px; }
 .instruction-cycle th:first-child { width: 1%; white-space: nowrap; }
@@ -500,6 +543,16 @@ main { min-width: 0; }
 .time-comparison:has(tbody th) thead th:nth-child(2) { width: 36%; }
 .time-comparison tbody th { white-space: nowrap; }
 .chapter .time-comparison td[rowspan] { vertical-align: middle; }
+.chapter .call-stack-table :is(th, td) { padding: 8px; overflow-wrap: anywhere; }
+.call-stack-table th:first-child { width: 44%; }
+.stack-frames code {
+  display: block;
+  padding: 3px 5px;
+  border: 1px solid var(--hairline);
+  font-size: 13px;
+}
+.stack-frames code + code { border-top: 0; }
+.stack-frames code:first-child { background: var(--diagram-process); font-weight: 700; }
 @container chapter (max-width: 264px) {
   .chapter .time-comparison { font-size: 13px; }
   .chapter .time-comparison :is(th, td) { padding-inline: 4px; overflow-wrap: anywhere; }

@@ -154,19 +154,23 @@ globalThis.chapterVisuals.memory = [
 globalThis.chapterVisuals["stack-heap"] = [
   {
     afterSection: 3,
-    html: `<figure class="concept-figure" role="img" aria-label="createUserがvalidateを呼び、validateのStack frameが先に外れる積み重ね図">
-      <h3 class="visual-title">関数呼び出しはStackに積む</h3>
-      <div class="visual-sequence">
-        <div class="visual-step"><span class="visual-chip">① createUser()</span><strong>push</strong><small>戻り先 main:12</small></div>
-        <span class="visual-arrow" aria-hidden="true">→</span>
-        <div class="visual-step"><span class="visual-chip">② validate()</span><strong>push</strong><small>引数 name = "A"</small></div>
-        <span class="visual-arrow" aria-hidden="true">→</span>
-        <div class="visual-step"><span class="visual-chip">② validate()</span><strong>pop</strong><small>結果 true</small></div>
-        <span class="visual-arrow" aria-hidden="true">→</span>
-        <div class="visual-step"><span class="visual-chip">① createUser()</span><strong>再開</strong><small>validateの後の行へ</small></div>
-      </div>
-      <div class="visual-memory"><div class="visual-memory-cell"><span>Stack（上）</span><b>createUser frame</b><small>戻り先・name参照</small></div><div class="visual-memory-cell"><span>Stack（下）</span><b>main frame</b><small>呼び出し元</small></div></div>
-      <figcaption class="visual-caption">最後に呼び出したvalidateが先に終わるため、StackはLIFO（後入れ先出し）になります。</figcaption>
+    html: `<figure class="concept-figure" aria-labelledby="call-stack-title">
+      <h3 class="visual-title" id="call-stack-title">関数呼び出しはStackに積む</h3>
+      <p><code>main()</code>が<code>createUser()</code>を呼び、その中で<code>validate()</code>を呼びます。右欄の箱は関数の作業枠（Stack frame）で、いちばん上の枠が実行中です。</p>
+      <table class="call-stack-table" aria-labelledby="call-stack-title">
+        <thead><tr><th scope="col">何が起きたか</th><th scope="col">その時点のStack</th></tr></thead>
+        <tbody>
+          <tr><th scope="row"><code>main()</code> 開始</th>
+            <td><div class="stack-frames"><code>main()</code></div></td></tr>
+          <tr><th scope="row">作成処理を呼ぶ</th>
+            <td><div class="stack-frames"><code>createUser()</code><code>main()</code></div></td></tr>
+          <tr><th scope="row">検証処理を呼ぶ</th>
+            <td><div class="stack-frames"><code>validate()</code><code>createUser()</code><code>main()</code></div></td></tr>
+          <tr><th scope="row">検証から戻る</th>
+            <td><div class="stack-frames"><code>createUser()</code><code>main()</code></div></td></tr>
+        </tbody>
+      </table>
+      <figcaption class="visual-caption">呼び出すと作業枠を上に積み（push）、戻るといちばん上の枠を外します（pop）。最後に積んだ <code>validate()</code> の枠が先に外れ、<code>createUser()</code> の続きへ戻ります。</figcaption>
     </figure>`
   },
   {

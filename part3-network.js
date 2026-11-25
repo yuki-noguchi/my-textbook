@@ -34,7 +34,25 @@
     <h3>マスクを変えると何が変わるか</h3>
     <p><code>192.168.1.10</code>から<code>192.168.1.130</code>へ送るとします。<code>/24</code>なら両方が同じ範囲です。<code>/25</code>では最後の8ビットの先頭1ビットもネットワーク部になり、範囲は0〜127と128〜255に分かれます。10と130は別々の範囲に入ります。</p>
     <p>相手のIPが同じ見た目でも、自分の設定したプレフィックスの長さで、直接届けられる範囲が変わります。接続できるはずの相手をゲートウェイへ送っている場合は、端末とネットワークの設定を見比べましょう。</p>`,
-    internal: `${packetDiagram("宛先判定", [["自分", "192.168.1.10/24"], ["宛先A", "192.168.1.20 → 同じ192.168.1.0/24"], ["宛先B", "8.8.8.8 → 別ネットワーク"], ["次の一歩", "Aは相手MAC / BはGateway MAC"]], "SubnetはIPを見て、直接届ける宛先かGatewayへ渡す宛先かを判定する境界です。")}${flowDiagram("住所の分解", [["IP Address", "192.168.1.10"], ["Network部", "192.168.1"], ["Host部", "10"], ["Gateway", "192.168.1.1"]], "192.168.1.10/24を区切った例です。先頭24ビットの192.168.1がネットワーク部で、残る8ビットの10がホスト部です。Gateway欄に示した192.168.1.1は、この例で別のネットワークに送るための設定値です。")}
+    internal: `
+      <figure class="concept-figure" aria-labelledby="subnet-address-title">
+        <h3 class="visual-title" id="subnet-address-title">IPv4アドレスを /24 で区切る</h3>
+        <p>自分のアドレスは <code>192.168.1.10/24</code> です。IPv4は、点で区切った数字一つが8ビットなので、/24では次のように区切れます。</p>
+        <div class="visual-compare">
+          <div><strong>先頭の24ビット</strong><p><code>192.168.1</code><br>ネットワーク部</p></div>
+          <div><strong>残りの8ビット</strong><p><code>10</code><br>ホスト部（その中の機器）</p></div>
+        </div>
+        <figcaption class="visual-caption">このネットワークの範囲は <code>192.168.1.0/24</code> です。宛先も同じ方法で区切ると、どちらの範囲にあるかを判断できます。</figcaption>
+      </figure>
+      <figure class="concept-figure" aria-labelledby="subnet-next-hop-title">
+        <h3 class="visual-title" id="subnet-next-hop-title">最初に渡す相手を決める</h3>
+        <p>図のPCは <code>192.168.1.10/24</code>、ルーターは <code>192.168.1.1</code> です。宛先IPの先頭24ビットを比べます。</p>
+        <div class="visual-compare">
+          <div><strong>宛先が <code>192.168.1.20</code></strong><p>ネットワーク部が同じです。宛先の機器に直接渡します。</p></div>
+          <div><strong>宛先が <code>192.168.2.20</code></strong><p>ネットワーク部が違います。別の経路の設定がなければ、ルーターに渡します。</p></div>
+        </div>
+        <figcaption class="visual-caption">ルーターに渡す場合も、IPパケットの宛先は <code>192.168.2.20</code> のままです。この区間のフレームにはルーターのMACアドレスを指定します。</figcaption>
+      </figure>
       <h3>CIDRとSubnet Mask</h3><p>CIDRの<code>/24</code>は、左から24個のビットがネットワーク部という短い書き方です。<code>/16</code>なら範囲が広く、<code>/28</code>なら機器部が4ビットなので小さな範囲です。家庭LANでよく見る<code>192.168.1.0/24</code>では、0から255までの値を扱いますが、ネットワーク自身とBroadcastなどに予約される値があります。</p><h3>PrivateとPublic</h3><p><code>192.168.0.0/16</code>などのPrivate Addressは家庭や会社の内側で使います。インターネット上で直接の宛先になるPublic Addressとは分けられます。多くの家庭では、ルーターがNATで内側のPrivate Addressと外側のPublic Addressを対応させます。</p>`,
     web: `<p>サーバーの設定では、ListenするAddressを<code>0.0.0.0</code>にすることがあります。これは「このProcessが持つ全Interfaceで受ける」という意味で、特定の宛先IPそのものではありません。外部公開が必要か、Private LANだけでよいかを考えて設定します。</p><p>第2部のSocketは、IP AddressとPortの組み合わせをOSへ登録します。第4部では、このIP配送の上にHTTP requestとTLSが乗ります。</p>`,
     lab: `${experiment("macOS", "ifconfig\nroute -n get default\nnetstat -rn", "自分のIP、Subnet、Default Gateway、経路表を確認します。", "inet、netmask、gateway、default行に注目します。", "自分の住所、近所の範囲、外へ出る門が別々の情報であると分かります。")}${experiment("Linux", "ip -4 addr\nip route\ncat /etc/resolv.conf", "LinuxのAddress、Route、DNS設定を確認します。", "scope、default via、dev、nameserverの意味を確認します。", "ip routeのdefault viaが、別ネットワークへ出るGatewayです。")}`,
@@ -119,7 +137,20 @@
     <h3>二つのWindowのうち、どちらが効くか</h3>
     <p>送信側がネットワークの混雑を見て未確認データを32 KiBまでに抑え、受信側は16 KiB分の空きしか知らせていないとします。この時点で送信を決める際の上限は小さい方です。受信側が処理を進めて空きが64 KiBになれば、今度は送信側の32 KiBが上限になります。</p>
     <p>その時点で未確認データが残っていれば、新しく送れるのは上限との差分です。受信処理が追いつかない場合と、経路側の混雑を抑えている場合を分けて見ると、送信が止まった理由を探せます。</p>`,
-    internal: `${laneDiagram("二つのWindow", [["受信側", "Receive Window：Bufferの空き"], ["送信側", "Congestion Window：道の混雑"], ["実際の送信量", "小さい方に合わせる"], ["観測", "ACK / RTT / Loss"]], "送信できる未確認データ量は、受信側のWindowと混雑側のWindowの両方に制限されます。")}${packetDiagram("Backpressure", [["Producer", "データを作る速度"], ["Socket Buffer", "一時的にためる"], ["Network", "送れる量に限界"], ["Consumer", "readして空きを作る"]], "下流が遅いとき上流に待ってもらうBackpressureは、TCPだけでなくWebアプリにも重要です。")}
+    internal: `
+      <figure class="concept-figure" aria-labelledby="tcp-window-title">
+        <h3 class="visual-title" id="tcp-window-title">TCPは二つの上限の小さい方に合わせる</h3>
+        <p>確認の返事（ACK）をまだ受けていないデータを、どこまで増やせるかの例です。受信側の空きが増えたとき、どちらの上限が効くかを比べます。</p>
+        <table class="diagram-data-table" aria-labelledby="tcp-window-title">
+          <thead><tr><th scope="col">比べるもの</th><th scope="col">空きが少ない</th><th scope="col">空きが増えた後</th></tr></thead>
+          <tbody>
+            <tr><th scope="row">受信側の上限</th><td>16 KiB</td><td>64 KiB</td></tr>
+            <tr><th scope="row">混雑側の上限</th><td>32 KiB</td><td>32 KiB</td></tr>
+            <tr><th scope="row">効く上限</th><td><strong>16 KiB</strong><br>受信側</td><td><strong>32 KiB</strong><br>混雑側</td></tr>
+          </tbody>
+        </table>
+        <figcaption class="visual-caption">すでに8 KiBを送ってACKを待っている場合、新たに送れるのは、空きが少ない例で8 KiB、空きが増えた後は24 KiBです。</figcaption>
+      </figure>${packetDiagram("Backpressure", [["Producer", "データを作る速度"], ["Socket Buffer", "一時的にためる"], ["Network", "送れる量に限界"], ["Consumer", "readして空きを作る"]], "下流が遅いとき上流に待ってもらうBackpressureは、TCPだけでなくWebアプリにも重要です。")}
       <h3>Flow Control</h3><p>Receive Windowは、受信側が今後受け取れる量です。サーバーProcessがSocketを読まないと、KernelのReceive Bufferが埋まりWindowが小さくなります。送信側は送信量を減らし、受信側をあふれさせないようにします。</p><h3>Congestion Control</h3><p>Congestion Windowは送信側が推測するネットワークの余裕です。TCPの実装は、開始時に小さく始め、ACKが届けば増やし、Lossや強い遅延を見れば減らします。アルゴリズム名や細かな式はOSによって異なります。</p>${callout("note", "似た言葉の整理", "Flow Controlは受信者を守り、Congestion Controlはネットワークを守ります。実際の送信可能量は両方の制限を受けます。")}`,
     web: `<p>Webサーバーが大きなファイルを送り、クライアントが遅いとき、Socketの送信Bufferがいっぱいになり<code>write()</code>が待つことがあります。これはアプリ側のBackpressureとして扱い、無限にメモリへためない設計が必要です。</p><p>クラウドの負荷試験では、帯域だけでなくRTT、Loss、cwnd、受信Windowを見ます。TCPが速くなれない理由が、回線の限界か、相手の読み取りか、混雑かを分けるためです。</p>`,
     lab: `${experiment("macOS", "netstat -anv -p tcp | head -n 20\n# 接続中のSocket統計を確認\n/usr/bin/nettop -m tcp", "TCPのWindowや通信量を観察します。", "Send-Q、Recv-Q、RTT、Throughputに注目します。", "Queueが増えると、相手が読めない、または道が混んでいる可能性を考えられます。")}${experiment("Linux", "ss -tin\ncat /proc/net/netstat | grep TcpExt", "Linuxのcwnd、rtt、再送などを確認します。", "ss -tiのcwnd、rcv_space、rtt、retransに注目します。", "受信Bufferと混雑制御に関わる値をSocket単位で確認できます。")}`,
